@@ -1,724 +1,644 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Presentación: Regresión Múltiple v2</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
-    <style>
-        /* Estilo base para la tipografía y el scroll */
-        body {
-            font-family: 'Inter', sans-serif;
-            color: #1a202c;
-            overscroll-behavior-y: contain; /* Evita el scroll "bounce" en móviles */
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Presentación: Regresión Múltiple v2</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet"/>
 
-        /* Contenedor principal para las diapositivas con scroll-snap */
-        .slides-container {
-            scroll-snap-type: y mandatory;
-            overflow-y: scroll;
-            height: 100vh;
-        }
+  <style>
+    /* Estilo base para la tipografía y el scroll */
+    body{
+      font-family:'Inter',sans-serif;
+      color:#1a202c;
+      overscroll-behavior-y:contain;
+    }
+    /* Contenedor principal con scroll-snap */
+    .slides-container{
+      scroll-snap-type:y mandatory;
+      overflow-y:scroll;
+      height:100vh;
+    }
+    /* Cada diapositiva */
+    .slide{
+      scroll-snap-align:start;
+      height:100vh;
+      width:100vw;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      padding:2rem;
+      text-align:center;
+      position:relative;
+      opacity:0;
+      transition:opacity .8s ease-in-out;
+    }
+    .slide.visible{ opacity:1; }
 
-        /* Estilo base para cada diapositiva */
-        .slide {
-            scroll-snap-align: start;
-            height: 100vh;
-            width: 100vw;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 2rem;
-            text-align: center;
-            position: relative;
-            opacity: 0;
-            transition: opacity 0.8s ease-in-out;
-        }
-        
-        /* Clase que se añade con JS para activar la animación de entrada */
-        .slide.visible {
-            opacity: 1;
-        }
-        
-        /* Estilos para los placeholders de imágenes */
-        .imagen-placeholder {
-            width: 80%;
-            max-width: 450px;
-            min-height: 250px; /* Usamos min-height para flexibilidad */
-            border: 2px dashed #cbd5e1;
-            border-radius: 1rem;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #f8fafc;
-            color: #94a3b8;
-            font-weight: bold;
-            margin-top: 2rem;
-            padding: 1rem;
-        }
+    /* Placeholders de imágenes */
+    .imagen-placeholder{
+      width:80%;
+      max-width:450px;
+      min-height:250px;
+      border:2px dashed #cbd5e1;
+      border-radius:1rem;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      background:#f8fafc;
+      color:#94a3b8;
+      font-weight:bold;
+      margin-top:2rem;
+      padding:1rem;
+    }
 
-        /* --- Animaciones reusables --- */
-        .fade-in-up {
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.6s ease, transform 0.6s ease;
-        }
-        .slide.visible .fade-in-up {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        .slide.visible .delay-200 { transition-delay: 200ms; }
-        .slide.visible .delay-400 { transition-delay: 400ms; }
-        .slide.visible .delay-600 { transition-delay: 600ms; }
-        .slide.visible .delay-800 { transition-delay: 800ms; }
+    /* Animaciones reusables */
+    .fade-in-up{
+      opacity:0; transform:translateY(20px);
+      transition:opacity .6s ease, transform .6s ease;
+    }
+    .slide.visible .fade-in-up{ opacity:1; transform:translateY(0); }
+    .slide.visible .delay-200{ transition-delay:200ms; }
+    .slide.visible .delay-400{ transition-delay:400ms; }
+    .slide.visible .delay-600{ transition-delay:600ms; }
+    .slide.visible .delay-800{ transition-delay:800ms; }
 
-        /* Animación para la lista de supuestos */
-        .checklist-item {
-            opacity: 0;
-            transform: translateX(-20px);
-            transition: opacity 1s ease, transform 1s ease;
-        }
-        .slide.visible .checklist-item {
-            opacity: 1;
-            transform: translateX(0);
-        }
+    /* Animación para checklist */
+    .checklist-item{
+      opacity:0; transform:translateX(-20px);
+      transition:opacity 1s ease, transform 1s ease;
+    }
+    .slide.visible .checklist-item{ opacity:1; transform:translateX(0); }
+    .slide.visible .checklist-item:nth-child(1){ transition-delay:.2s; }
+    .slide.visible .checklist-item:nth-child(2){ transition-delay:.8s; }
+    .slide.visible .checklist-item:nth-child(3){ transition-delay:1.4s; }
+    .slide.visible .checklist-item:nth-child(4){ transition-delay:2s; }
+    .check-icon{
+      opacity:0; transform:scale(.5);
+      transition:opacity .4s ease, transform .4s ease; transition-delay:inherit;
+    }
+    .slide.visible .check-icon{ opacity:1; transform:scale(1); }
 
-                /* Retrasos escalonados */
-        .slide.visible .checklist-item:nth-child(1) {
-        transition-delay: 0.2s;
-        }
-        .slide.visible .checklist-item:nth-child(2) {
-        transition-delay: 0.8s;
-        }
-        .slide.visible .checklist-item:nth-child(3) {
-        transition-delay: 1.4s;
-        }
-        .slide.visible .checklist-item:nth-child(4) {
-        transition-delay: 2s;
-        }
-        /* Puedes seguir agregando más según el número de ítems */
+    /* VIF */
+    .vif-indicator{ transform:scaleX(0); transform-origin:left; transition:transform 1s cubic-bezier(.25,1,.5,1); }
+    .slide.visible .vif-indicator{ transform:scaleX(1); transition-delay:600ms; }
+    .slide.visible .vif-indicator:nth-child(1){ transition-delay:.2s; }
+    .slide.visible .vif-indicator:nth-child(2){ transition-delay:1s; }
+    .slide.visible .vif-indicator:nth-child(3){ transition-delay:1.8s; }
+    .slide.visible .vif-indicator:nth-child(4){ transition-delay:2.6s; }
 
-        .check-icon {
-            opacity: 0;
-            transform: scale(0.5);
-            transition: opacity 0.4s ease, transform 0.4s ease;
-            transition-delay: inherit;
-        }
-        .slide.visible .check-icon {
-            opacity: 1;
-            transform: scale(1);
-        }
-        
-        /* Animación para la escala VIF */
-        .vif-indicator {
-            transform: scaleX(0);
-            transform-origin: left;
-            transition: transform 1s cubic-bezier(0.25, 1, 0.5, 1);
-        }
-        .slide.visible .vif-indicator {
-            transform: scaleX(1);
-            transition-delay: 600ms;
-        }
+    /* Durbin–Watson */
+    .dw-pointer{ bottom:-10px; opacity:0; transform:translateY(20px); transition:opacity 2s ease, transform 2s ease; }
+    .slide.visible .dw-pointer{ opacity:1; transform:translateY(0); transition-delay:600ms; }
 
-        .slide.visible .vif-indicator:nth-child(1) {
-        transition-delay: 0.2s;
-        }
-        .slide.visible .vif-indicator:nth-child(2) {
-        transition-delay: 1s;
-        }
-        .slide.visible .vif-indicator:nth-child(3) {
-        transition-delay: 1.8s;
-        }
-        .slide.visible .vif-indicator:nth-child(4) {
-        transition-delay: 2.6s;
-        }
+    /* Imagenes dentro de placeholder */
+    .imagen-placeholder{ padding:0; margin:0; border:0; background:transparent; display:block; line-height:0; overflow:hidden; }
+    .qq-image{ display:block; width:100%; height:auto; }
+    p.fade-in-up.delay-200{ margin-bottom:.5rem; }
 
-        /* Animación para escala Durbin-Watson */
-        .dw-pointer {
-            bottom: -10px;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 2s ease, transform 2s ease;
-        }
-        .slide.visible .dw-pointer {
-            opacity: 1;
-            transform: translateY(0);
-            transition-delay: 600ms;
-        }
-
-        .imagen-placeholder{
-        padding: 0;                /* quita relleno interno */
-        margin: 0;
-        border: 0;                 /* si no quieres el borde punteado */
-        background: transparent;
-        display: block;
-        line-height: 0;            /* evita espacio por línea base */
-        overflow: hidden;          /* por si la imagen llega a sobresalir */
-        }
-
-        .qq-image{
-        display: block;            /* evita espacio extra bajo la imagen */
-        width: 100%;               /* ocupa todo el ancho disponible */
-        height: auto;              /* mantiene proporción */
-        /* Si quieres que LLENE el alto de un contenedor fijo, usa:
-        height: 100%;
-        object-fit: cover;         // o 'contain' si no quieres recortar
-        */
-        }
-        p.fade-in-up.delay-200 {
-        margin-bottom: 0.5rem; /* Reduce espacio entre texto y imagen */
-        }
-
- 
-    </style>
+    /* --- Mejora para móvil: sliders, tarjetas y SVG --- */
+    .k-range{
+      appearance:none; height:10px; border-radius:9999px; background:#e5e7eb; outline:none;
+    }
+    .k-range::-webkit-slider-thumb{
+      appearance:none; width:22px; height:22px; border-radius:50%; background:#4f46e5; cursor:pointer;
+      border:2px solid #fff; box-shadow:0 0 0 2px #4f46e5;
+    }
+    .k-range::-moz-range-thumb{
+      width:22px; height:22px; border-radius:50%; background:#4f46e5; cursor:pointer;
+      border:2px solid #fff; box-shadow:0 0 0 2px #4f46e5;
+    }
+    .responsive-plot{ height:auto; } /* desktop */
+    @media (max-width:768px){
+      .slide{ padding:1rem; }
+      .card-mobile{ max-width:92vw; }
+      .responsive-plot{ height:380px; } /* más alto en móvil */
+      .k-range{ height:14px; }
+      .k-range::-webkit-slider-thumb{ width:28px; height:28px; }
+      .k-range::-moz-range-thumb{ width:28px; height:28px; }
+      .badge-mobile{ font-size:.95rem; padding:.35rem .75rem; }
+    }
+  </style>
 </head>
 <body class="bg-gray-100">
 
-    <div class="slides-container">
+  <div class="slides-container">
 
-        <!-- Slide 1: Título -->
-        <section class="slide bg-slate-900 text-white">
-            <h1 class="text-4xl md:text-7xl font-black tracking-tight fade-in-up">REGRESIÓN MÚLTIPLE</h1>
-            <h2 class="mt-4 text-xl md:text-3xl font-light text-slate-300 fade-in-up delay-200">Y Validación de Supuestos</h2>
-        </section>
+    <!-- Slide 1: Título -->
+    <section class="slide bg-slate-900 text-white">
+      <h1 class="text-4xl md:text-7xl font-black tracking-tight fade-in-up">REGRESIÓN MÚLTIPLE</h1>
+      <h2 class="mt-4 text-xl md:text-3xl font-light text-slate-300 fade-in-up delay-200">Y Validación de Supuestos</h2>
+    </section>
 
-        <!-- Slide 2: Diagrama de Regresión Múltiple -->
-        <section class="slide">
-            <h2 class="text-3xl md:text-5xl font-bold text-slate-800 fade-in-up">Regresión Múltiple</h2>
-            <p class="mt-4 text-lg md:text-xl text-gray-600 max-w-2xl fade-in-up delay-200">Explicamos una variable (Y) a partir de múltiples variables (X).</p>
-            <div class="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 mt-12">
-                <div class="flex gap-4">
-                    <div class="fade-in-up delay-400 bg-blue-100 text-blue-800 p-4 rounded-lg shadow-md font-bold text-xl">X1</div>
-                    <div class="fade-in-up delay-600 bg-blue-100 text-blue-800 p-4 rounded-lg shadow-md font-bold text-xl">X2</div>
-                    <div class="fade-in-up delay-800 bg-blue-100 text-blue-800 p-4 rounded-lg shadow-md font-bold text-xl">X3</div>
-                    <div class="fade-in-up delay-600 bg-blue-100 text-blue-800 p-4 rounded-lg shadow-md font-bold text-xl">...</div>
-                    <div class="fade-in-up delay-800 bg-blue-100 text-blue-800 p-4 rounded-lg shadow-md font-bold text-xl">Xn</div>
-                </div>
-                <div class="fade-in-up delay-800 text-blue-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 md:h-16 md:w-16 transform md:rotate-0 rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                    </svg>
-                </div>
-                <div class="fade-in-up delay-800 bg-green-100 text-green-800 p-8 rounded-full shadow-lg font-bold text-3xl">Y</div>
-            </div>
-        </section>
-        
-        <!-- Slide 3: Coeficientes Estimados -->
-        <section class="slide">
-            <h2 class="text-3xl md:text-5xl font-bold text-slate-800 fade-in-up">Coeficientes Estimados</h2>
-            <p class="mt-4 text-lg md:text-xl text-gray-600 max-w-2xl fade-in-up delay-200">Cuantifican el impacto de cada variable X en Y.</p>
-            <div class="flex flex-col md:flex-row gap-6 mt-10">
-                <div class="fade-in-up delay-400 bg-white p-6 rounded-lg shadow-xl border border-gray-200">
-                    <h3 class="text-xl font-bold text-indigo-600">b₀ (Intercepto)</h3>
-                </div>
-                <div class="fade-in-up delay-600 bg-white p-6 rounded-lg shadow-xl border border-gray-200">
-                    <h3 class="text-xl font-bold text-indigo-600">b₁ (Pendiente X1)</h3>
-                </div>
-                <div class="fade-in-up delay-800 bg-white p-6 rounded-lg shadow-xl border border-gray-200">
-                    <h3 class="text-xl font-bold text-indigo-600">bₙ (Otras Pendientes)</h3>
-                </div>
-            </div>
-        </section>
-
-        <!-- Slide 4: Checklist de Supuestos -->
-        <section class="slide bg-slate-800 text-white">
-            <h2 class="text-3xl md:text-5xl font-bold fade-in-up">Supuestos Clave</h2>
-            <p class="mt-4 text-lg md:text-xl text-slate-300 max-w-2xl fade-in-up delay-200">Debemos validar los supuestos para confiar en el modelo.</p>
-            <ul class="mt-8 text-left space-y-4 text-xl md:text-2xl">
-                <li class="checklist-item delay-200 flex items-center gap-4">
-                    <span class="check-icon text-green-400"><svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg></span> Linealidad
-                </li>
-                <li class="checklist-item delay-400 flex items-center gap-4">
-                     <span class="check-icon text-green-400"><svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg></span> Normalidad
-                </li>
-                <li class="checklist-item delay-600 flex items-center gap-4">
-                     <span class="check-icon text-green-400"><svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg></span> Homocedasticidad
-                </li>
-                <li class="checklist-item delay-800 flex items-center gap-4">
-                     <span class="check-icon text-green-400"><svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg></span> Independencia (No Autocorrelación)
-                </li>
-            </ul>
-
-            <!-- NUEVO: nota sobre VIF opcional -->
-            <p class="mt-6 text-base md:text-lg text-slate-300/90">
-                <span class="font-semibold">VIF (opcional):</span> úsalo como diagnóstico de multicolinealidad para evaluar la estabilidad de los coeficientes.
-            </p>
-        </section>
-        
-
-        <!-- Slide 5 (nuevo): Linealidad interactiva -->
-        <section class="slide" id="slide-linealidad">
-        <h2 class="text-3xl md:text-5xl font-bold text-slate-800 fade-in-up">
-            Linealidad
-        </h2>
-
-        <p class="mt-4 text-lg md:text-xl text-gray-600 max-w-2xl fade-in-up delay-200">
-            En regresión <span class="font-semibold">múltiple</span>, Y debe relacionarse de forma
-            <span class="font-semibold">lineal</span> con cada predictor (manteniendo los demás constantes).
-        </p>
-
-        <div class="fade-in-up delay-400 mx-auto w-full max-w-3xl bg-white rounded-2xl shadow-xl p-4">
-            <!-- Controles -->
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <label for="k-slider" class="font-semibold text-slate-700">
-                <var>k</var> (0 = lineal)
-            </label>
-            <input id="k-slider" type="range" min="-0.6" max="0.6" step="0.02" value="0"
-                    class="w-full md:w-2/3 accent-indigo-600">
-            <span id="k-badge"
-                    class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-bold bg-green-100 text-green-700">
-                k = 0.00 · Se cumple linealidad
-            </span>
-            </div>
-
-            <!-- Lienzo SVG -->
-            <div class="mt-4 overflow-hidden rounded-xl border border-gray-200">
-            <svg id="lin-svg" viewBox="0 0 640 380" class="w-full h-auto select-none">
-                <rect x="0" y="0" width="640" height="380" fill="#ffffff"></rect>
-
-                <g id="plot" transform="translate(60,20)">
-                <rect x="0" y="0" width="560" height="320" fill="#fafafa" stroke="#e5e7eb"></rect>
-
-                <!-- ejes -->
-                <line x1="0" y1="160" x2="560" y2="160" stroke="#94a3b8" stroke-dasharray="4 4"/>
-                <line x1="280" y1="0"  x2="280" y2="320" stroke="#94a3b8" stroke-dasharray="4 4"/>
-                <text x="540" y="178" font-size="12" fill="#64748b">X</text>
-                <text x="265" y="14" font-size="12" fill="#64748b">Y</text>
-
-                <!-- capas -->
-                <g id="line-linear"></g>   <!-- y = x (modelo lineal) -->
-                <g id="line-true"></g>     <!-- y = x + k x^2 (relación real) -->
-                <g id="residuals"></g>     <!-- residuales a la recta -->
-                <g id="points"></g>        <!-- puntos -->
-                </g>
-            </svg>
-            </div>
+    <!-- Slide 2 -->
+    <section class="slide">
+      <h2 class="text-3xl md:text-5xl font-bold text-slate-800 fade-in-up">Regresión Múltiple</h2>
+      <p class="mt-4 text-lg md:text-xl text-gray-600 max-w-2xl fade-in-up delay-200">Explicamos una variable (Y) a partir de múltiples variables (X).</p>
+      <div class="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 mt-12">
+        <div class="flex gap-4">
+          <div class="fade-in-up delay-400 bg-blue-100 text-blue-800 p-4 rounded-lg shadow-md font-bold text-xl">X1</div>
+          <div class="fade-in-up delay-600 bg-blue-100 text-blue-800 p-4 rounded-lg shadow-md font-bold text-xl">X2</div>
+          <div class="fade-in-up delay-800 bg-blue-100 text-blue-800 p-4 rounded-lg shadow-md font-bold text-xl">X3</div>
+          <div class="fade-in-up delay-600 bg-blue-100 text-blue-800 p-4 rounded-lg shadow-md font-bold text-xl">...</div>
+          <div class="fade-in-up delay-800 bg-blue-100 text-blue-800 p-4 rounded-lg shadow-md font-bold text-xl">Xn</div>
         </div>
-        </section>
-
-
-
-        <!-- Slide X: Component + Residual (Partial Residual) -->
-<section class="slide" id="slide-cpr">
-  <h2 class="text-3xl md:text-5xl font-bold text-slate-800 fade-in-up">
-    1b. Component + Residual (Y)
-  </h2>
-
-  <p class="mt-4 text-lg md:text-xl text-gray-600 max-w-2xl fade-in-up delay-200">
-    Visualizamos la relación parcial entre Y y <span class="font-semibold">X</span>:
-    eje Y = <span class="font-semibold">β₁·X + e</span>.
-  </p>
-
-  <div class="fade-in-up delay-400 mx-auto w-full max-w-3xl bg-white rounded-2xl shadow-xl p-4">
-    <!-- Controles -->
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-      <label for="cpr-slider" class="font-semibold text-slate-700">
-        Curvatura <var>k</var> (0 = lineal)
-      </label>
-
-      <div class="relative w-full md:w-2/3 select-none" id="cpr-wrap">
-        <input id="cpr-slider" type="range" min="-0.6" max="0.6" step="0.02" value="0"
-               class="w-full accent-indigo-600 k-range">
-        <span id="cpr-bubble"
-              class="absolute -top-8 left-0 -translate-x-1/2 px-2 py-1 rounded-md text-xs font-bold
-                     bg-green-100 text-green-700 shadow">k = 0.00</span>
+        <div class="fade-in-up delay-800 text-blue-500">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 md:h-16 md:w-16 transform md:rotate-0 rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+          </svg>
+        </div>
+        <div class="fade-in-up delay-800 bg-green-100 text-green-800 p-8 rounded-full shadow-lg font-bold text-3xl">Y</div>
       </div>
+    </section>
 
-      <span id="cpr-badge"
-            class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-bold bg-green-100 text-green-700">
-        Se cumple linealidad
-      </span>
-    </div>
+    <!-- Slide 3 -->
+    <section class="slide">
+      <h2 class="text-3xl md:text-5xl font-bold text-slate-800 fade-in-up">Coeficientes Estimados</h2>
+      <p class="mt-4 text-lg md:text-xl text-gray-600 max-w-2xl fade-in-up delay-200">Cuantifican el impacto de cada variable X en Y.</p>
+      <div class="flex flex-col md:flex-row gap-6 mt-10">
+        <div class="fade-in-up delay-400 bg-white p-6 rounded-lg shadow-xl border border-gray-200">
+          <h3 class="text-xl font-bold text-indigo-600">b₀ (Intercepto)</h3>
+        </div>
+        <div class="fade-in-up delay-600 bg-white p-6 rounded-lg shadow-xl border border-gray-200">
+          <h3 class="text-xl font-bold text-indigo-600">b₁ (Pendiente X1)</h3>
+        </div>
+        <div class="fade-in-up delay-800 bg-white p-6 rounded-lg shadow-xl border border-gray-200">
+          <h3 class="text-xl font-bold text-indigo-600">bₙ (Otras Pendientes)</h3>
+        </div>
+      </div>
+    </section>
 
-    <!-- Lienzo SVG -->
-    <div class="mt-4 overflow-hidden rounded-xl border border-gray-200">
-      <svg id="cpr-svg" viewBox="0 0 640 380" class="w-full h-auto select-none" role="img"
-           aria-label="Partial residual: Component + Residual (Y) frente a X">
-        <rect x="0" y="0" width="640" height="380" fill="#ffffff"></rect>
+    <!-- Slide 4: Checklist -->
+    <section class="slide bg-slate-800 text-white">
+      <h2 class="text-3xl md:text-5xl font-bold fade-in-up">Supuestos Clave</h2>
+      <p class="mt-4 text-lg md:text-xl text-slate-300 max-w-2xl fade-in-up delay-200">Debemos validar los supuestos para confiar en el modelo.</p>
+      <ul class="mt-8 text-left space-y-4 text-xl md:text-2xl">
+        <li class="checklist-item delay-200 flex items-center gap-4">
+          <span class="check-icon text-green-400">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+          </span> Linealidad
+        </li>
+        <li class="checklist-item delay-400 flex items-center gap-4">
+          <span class="check-icon text-green-400">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+          </span> Normalidad
+        </li>
+        <li class="checklist-item delay-600 flex items-center gap-4">
+          <span class="check-icon text-green-400">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+          </span> Homocedasticidad
+        </li>
+        <li class="checklist-item delay-800 flex items-center gap-4">
+          <span class="check-icon text-green-400">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+          </span> Independencia (No Autocorrelación)
+        </li>
+      </ul>
+      <p class="mt-6 text-base md:text-lg text-slate-300/90">
+        <span class="font-semibold">VIF (opcional):</span> úsalo como diagnóstico de multicolinealidad para evaluar la estabilidad de los coeficientes.
+      </p>
+    </section>
 
-        <g id="plot" transform="translate(60,20)">
-          <rect x="0" y="0" width="560" height="320" fill="#fafafa" stroke="#e5e7eb"></rect>
+    <!-- Slide 5: Linealidad (interactivo) -->
+    <section class="slide" id="slide-linealidad">
+      <h2 class="text-3xl md:text-5xl font-bold text-slate-800 fade-in-up">Linealidad</h2>
+      <p class="mt-4 text-lg md:text-xl text-gray-600 max-w-2xl fade-in-up delay-200">
+        
+      </p>
 
-          <!-- guías -->
-          <line x1="0" y1="160" x2="560" y2="160" stroke="#94a3b8" stroke-dasharray="4 4"/>
-          <line x1="280" y1="0"  x2="280" y2="320" stroke="#94a3b8" stroke-dasharray="4 4"/>
+      <div class="fade-in-up delay-400 mx-auto w-full max-w-3xl md:max-w-3xl card-mobile bg-white rounded-2xl shadow-xl p-4">
+        <!-- Controles -->
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <label for="k-slider" class="font-semibold text-slate-700"><var>k</var> (0 = lineal)</label>
+          <input id="k-slider" type="range" min="-0.6" max="0.6" step="0.02" value="0" class="w-full md:w-2/3 accent-indigo-600 k-range"/>
+          <span id="k-badge" class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-bold bg-green-100 text-green-700 badge-mobile">
+            k = 0.00 · Se cumple linealidad
+          </span>
+        </div>
 
-          <text x="540" y="178" font-size="12" fill="#64748b">X</text>
-          <text x="210" y="14"  font-size="12" fill="#64748b">Component + Residual (Y)</text>
+        <!-- Lienzo SVG -->
+        <div class="mt-4 overflow-hidden rounded-xl border border-gray-200">
+          <svg id="lin-svg" viewBox="0 0 640 380" class="w-full responsive-plot select-none">
+            <rect x="0" y="0" width="640" height="380" fill="#ffffff"></rect>
+            <g id="plot" transform="translate(60,20)">
+              <rect x="0" y="0" width="560" height="320" fill="#fafafa" stroke="#e5e7eb"></rect>
+              <!-- ejes -->
+              <line x1="0" y1="160" x2="560" y2="160" stroke="#94a3b8" stroke-dasharray="4 4"/>
+              <line x1="280" y1="0"  x2="280" y2="320" stroke="#94a3b8" stroke-dasharray="4 4"/>
+              <text x="540" y="178" font-size="12" fill="#64748b">X</text>
+              <text x="265" y="14"  font-size="12" fill="#64748b">Y</text>
+              <!-- capas -->
+              <g id="line-linear"></g>
+              <g id="line-true"></g>
+              <g id="residuals"></g>
+              <g id="points"></g>
+            </g>
+          </svg>
+        </div>
+      </div>
+    </section>
 
-          <!-- capas -->
-          <g id="cpr-line-linear"></g>  <!-- β1·X -->
-          <g id="cpr-trend"></g>        <!-- tendencia sobre CPR -->
-          <g id="cpr-residuals"></g>    <!-- residuales verticales -->
-          <g id="cpr-points"></g>       <!-- puntos CPR -->
-        </g>
-      </svg>
-    </div>
+    <!-- Slide X: Component + Residual (CPR) -->
+    <section class="slide" id="slide-cpr">
+      <h2 class="text-3xl md:text-5xl font-bold text-slate-800 fade-in-up">Component + Residual (Y)</h2>
+      <p class="mt-4 text-lg md:text-xl text-gray-600 max-w-2xl fade-in-up delay-200">
+        eje Y = <span class="font-semibold">β₁·X + e</span>.
+      </p>
 
-    <div class="mt-3 text-sm text-slate-600">
-      Azul (punteado): componente lineal estimado. Magenta: tendencia sobre CPR. Curvatura ≈ violación de linealidad.
-    </div>
+      <div class="fade-in-up delay-400 mx-auto w-full max-w-3xl md:max-w-3xl card-mobile bg-white rounded-2xl shadow-xl p-4">
+        <!-- Controles -->
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <label for="cpr-slider" class="font-semibold text-slate-700"><var>k</var> (0 = lineal)</label>
+          <div class="relative w-full md:w-2/3 select-none" id="cpr-wrap">
+            <input id="cpr-slider" type="range" min="-0.6" max="0.6" step="0.02" value="0" class="w-full accent-indigo-600 k-range"/>
+            <span id="cpr-bubble" class="absolute -top-8 left-0 -translate-x-1/2 px-2 py-1 rounded-md text-xs font-bold bg-green-100 text-green-700 shadow">k = 0.00</span>
+          </div>
+          <span id="cpr-badge" class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-bold bg-green-100 text-green-700 badge-mobile">
+            Se cumple linealidad
+          </span>
+        </div>
+
+        <!-- Lienzo SVG -->
+        <div class="mt-4 overflow-hidden rounded-xl border border-gray-200">
+          <svg id="cpr-svg" viewBox="0 0 640 380" class="w-full responsive-plot select-none" role="img" aria-label="Partial residual: Component + Residual (Y) frente a X">
+            <rect x="0" y="0" width="640" height="380" fill="#ffffff"></rect>
+            <g id="plot" transform="translate(60,20)">
+              <rect x="0" y="0" width="560" height="320" fill="#fafafa" stroke="#e5e7eb"></rect>
+              <!-- guías -->
+              <line x1="0" y1="160" x2="560" y2="160" stroke="#94a3b8" stroke-dasharray="4 4"/>
+              <line x1="280" y1="0"  x2="280" y2="320" stroke="#94a3b8" stroke-dasharray="4 4"/>
+              <text x="540" y="178" font-size="12" fill="#64748b">X</text>
+              <text x="210" y="14"  font-size="12" fill="#64748b">Component + Residual (Y)</text>
+              <!-- capas -->
+              <g id="cpr-line-linear"></g>
+              <g id="cpr-trend"></g>
+              <g id="cpr-residuals"></g>
+              <g id="cpr-points"></g>
+            </g>
+          </svg>
+        </div>
+
+        <div class="mt-3 text-sm text-slate-600">
+          Azul (punteado): componente lineal estimado. Magenta: tendencia sobre CPR. Curvatura ≈ violación de linealidad.
+        </div>
+      </div>
+    </section>
+
+    <!-- Slide Normalidad -->
+    <section class="slide">
+      <h2 class="text-3xl md:text-5xl font-bold text-slate-800 fade-in-up">Normalidad de Residuos</h2>
+      <p class="mt-4 text-lg md:text-xl text-gray-600 max-w-2xl fade-in-up delay-200">Validamos con un gráfico Q-Q.</p>
+      <div class="imagen-placeholder fade-in-up delay-400">
+        <img src="imagenes/normalidad.png" alt="Gráfico Q-Q" class="qq-image"/>
+      </div>
+    </section>
+
+    <!-- Slide Homocedasticidad -->
+    <section class="slide">
+      <h2 class="text-3xl md:text-5xl font-bold text-slate-800 fade-in-up">Homocedasticidad</h2>
+      <p class="mt-4 text-lg md:text-xl text-gray-600 max-w-2xl fade-in-up delay-200">La varianza de los errores debe ser constante.</p>
+      <div class="imagen-placeholder fade-in-up delay-400">
+        <img src="imagenes/homocedasticidad.png" alt="Gráfico Residuos vs. Ajustados" class="homoc-image"/>
+      </div>
+    </section>
+
+    <!-- Slide Autocorrelación -->
+    <section class="slide">
+      <h2 class="text-4xl md:text-6xl font-bold text-slate-800 fade-in-up">¿Los errores están correlacionados?</h2>
+      <p class="mt-4 text-lg md:text-xl text-gray-600 max-w-2xl fade-in-up delay-200">Lo medimos con el test de Durbin-Watson.</p>
+      <div class="w-full max-w-2xl mt-8 fade-in-up delay-400">
+        <div class="relative h-4 bg-gray-200 rounded-full flex">
+          <div class="w-1/2 bg-gradient-to-r from-red-400 to-yellow-300 rounded-l-full"></div>
+          <div class="w-1/2 bg-gradient-to-r from-yellow-300 to-red-400 rounded-r-full"></div>
+          <div class="absolute w-1/4 h-full left-1/4 bg-green-400 border-x-4 border-gray-100"></div>
+          <div class="dw-pointer absolute left-1/2 -translate-x-1/2 text-center">
+            <span class="font-bold text-green-700 bg-white px-2 rounded">Ideal ≈ 2</span>
+            <div class="w-0 h-0 border-l-8 border-l-transparent border-r-8 border-r-transparent border-t-8 border-t-green-500 mx-auto"></div>
+          </div>
+        </div>
+        <div class="flex justify-between text-sm font-bold mt-2 text-gray-600">
+          <span>0 (Corr. +)</span>
+          <span>4 (Corr. -)</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Slide VIF -->
+    <section class="slide">
+      <h2 class="text-3xl md:text-5xl font-bold text-slate-800 fade-in-up">No Multicolinealidad</h2>
+      <p class="mt-4 text-lg md:text-xl text-gray-600 max-w-2xl fade-in-up delay-200">Usamos el Factor de Inflación de Varianza (VIF).</p>
+      <div class="w-full max-w-md mt-8 fade-in-up delay-400">
+        <div class="text-left font-bold text-gray-700">VIF &lt; 10 es aceptable</div>
+        <div class="relative h-8 bg-gray-200 rounded-full mt-2 overflow-hidden">
+          <div class="absolute h-full w-full bg-gradient-to-r from-green-400 to-red-500"></div>
+          <div class="vif-indicator absolute h-full w-1/4 bg-green-500 flex items-center justify-end pr-2 rounded-r-full">
+            <span class="text-white font-black text-lg">5</span>
+          </div>
+          <div class="absolute left-1/2 -translate-x-1/2 top-0 h-full border-r-4 border-dashed border-white flex items-center">
+            <span class="font-bold bg-white px-2 rounded-md -mr-7 shadow-lg">10</span>
+          </div>
+        </div>
+        <div class="text-right font-bold text-red-600 mt-1">VIF &gt; 10 es un problema</div>
+      </div>
+    </section>
+
+    <!-- Slide final -->
+    <section class="slide bg-indigo-700 text-white space-y-6 md:space-y-10">
+      <h2 class="text-4xl md:text-6xl font-black tracking-tight fade-in-up">¿Qué nos dice el modelo?</h2>
+      <div class="imagen-placeholder border-indigo-400 bg-indigo-600 text-indigo-200 fade-in-up delay-200">
+        <img src="imagenes/resumen.png" alt="Resumen del Modelo" class="resumen-image"/>
+      </div>
+    </section>
   </div>
-</section>
 
-
-        <!-- Slide 5: Normalidad -->
-        <section class="slide">
-        <h2 class="text-3xl md:text-5xl font-bold text-slate-800 fade-in-up">
-            Normalidad de Residuos
-        </h2>
-        <p class="mt-4 text-lg md:text-xl text-gray-600 max-w-2xl fade-in-up delay-200">
-            Validamos con un gráfico Q-Q.
-        </p>
-        <div class="imagen-placeholder fade-in-up delay-400">
-            <img src="imagenes/normalidad.png" alt="Gráfico Q-Q" class="qq-image">
-        </div>
-        </section>
-
-
-        <!-- Slide 6: Homocedasticidad -->
-        <section class="slide">
-        <h2 class="text-3xl md:text-5xl font-bold text-slate-800 fade-in-up">
-            Homocedasticidad
-        </h2>
-        <p class="mt-4 text-lg md:text-xl text-gray-600 max-w-2xl fade-in-up delay-200">
-            La varianza de los errores debe ser constante.
-        </p>
-        <div class="imagen-placeholder fade-in-up delay-400">
-            <img src="imagenes/homocedasticidad.png" alt="Gráfico Residuos vs. Ajustados" class="homoc-image">
-        </div>
-        </section>
-
-
-        <!-- Slide 7: Autocorrelación -->
-        <section class="slide">
-            <h2 class="text-4xl md:text-6xl font-bold text-slate-800 fade-in-up">¿Los errores están correlacionados?</h2>
-            <p class="mt-4 text-lg md:text-xl text-gray-600 max-w-2xl fade-in-up delay-200">Lo medimos con el test de Durbin-Watson.</p>
-            <div class="w-full max-w-2xl mt-8 fade-in-up delay-400">
-                <div class="relative h-4 bg-gray-200 rounded-full flex">
-                    <div class="w-1/2 bg-gradient-to-r from-red-400 to-yellow-300 rounded-l-full"></div>
-                    <div class="w-1/2 bg-gradient-to-r from-yellow-300 to-red-400 rounded-r-full"></div>
-                    <div class="absolute w-1/4 h-full left-1/4 bg-green-400 border-x-4 border-gray-100"></div>
-                     <div class="dw-pointer absolute left-1/2 -translate-x-1/2 text-center">
-                        <span class="font-bold text-green-700 bg-white px-2 rounded">Ideal ≈ 2</span>
-                        <div class="w-0 h-0 border-l-8 border-l-transparent border-r-8 border-r-transparent border-t-8 border-t-green-500 mx-auto"></div>
-                    </div>
-                </div>
-                <div class="flex justify-between text-sm font-bold mt-2 text-gray-600">
-                    <span>0 (Corr. +)</span>
-                    <span>4 (Corr. -)</span>
-                </div>
-            </div>
-        </section>
-
-        <!-- Slide 8: Multicolinealidad (VIF) -->
-        <section class="slide">
-            <h2 class="text-3xl md:text-5xl font-bold text-slate-800 fade-in-up">3. No Multicolinealidad</h2>
-             <p class="mt-4 text-lg md:text-xl text-gray-600 max-w-2xl fade-in-up delay-200">Usamos el Factor de Inflación de Varianza (VIF).</p>
-            <div class="w-full max-w-md mt-8 fade-in-up delay-400">
-                <div class="text-left font-bold text-gray-700">VIF < 10 es aceptable</div>
-                <div class="relative h-8 bg-gray-200 rounded-full mt-2 overflow-hidden">
-                    <div class="absolute h-full w-full bg-gradient-to-r from-green-400 to-red-500"></div>
-                    <div class="vif-indicator absolute h-full w-1/4 bg-green-500 flex items-center justify-end pr-2 rounded-r-full">
-                         <span class="text-white font-black text-lg">5</span>
-                    </div>
-                    <div class="absolute left-1/2 -translate-x-1/2 top-0 h-full border-r-4 border-dashed border-white flex items-center">
-                        <span class="font-bold bg-white px-2 rounded-md -mr-7 shadow-lg">10</span>
-                    </div>
-                </div>
-                <div class="text-right font-bold text-red-600 mt-1">VIF > 10 es un problema</div>
-            </div>
-        </section>
-
-        <!-- Slide 9: Frase Final -->
-        <section class="slide bg-indigo-700 text-white space-y-6 md:space-y-10">
-        <h2 class="text-4xl md:text-6xl font-black tracking-tight fade-in-up">
-            ¿Qué nos dice el modelo?
-        </h2>
-
-        <div class="imagen-placeholder border-indigo-400 bg-indigo-600 text-indigo-200 fade-in-up delay-200">
-            <img src="imagenes/resumen.png" alt="Resumen del Modelo" class="resumen-image">
-        </div>
-        </section>
-    </div>
-
-    <script>
+  <!-- ====== SCRIPTS ====== -->
+  <script>
     document.addEventListener('DOMContentLoaded', () => {
-        /* ========== TU OBSERVER ORIGINAL (SIN CAMBIOS) ========== */
-        const slides = document.querySelectorAll('.slide');
-
-        const observerOptions = {
-        root: null,
-        rootMargin: '0px',
-        threshold: 0.5 // Se activa cuando el 50% del slide es visible
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-            entry.target.classList.add('visible');
-            } else {
-            entry.target.classList.remove('visible');
-            }
+      /* === IntersectionObserver (tu original) === */
+      const slides = document.querySelectorAll('.slide');
+      const observer = new IntersectionObserver((entries)=>{
+        entries.forEach(entry=>{
+          if(entry.isIntersecting){ entry.target.classList.add('visible'); }
+          else { entry.target.classList.remove('visible'); }
         });
-        }, observerOptions);
+      }, {root:null, rootMargin:'0px', threshold:0.5});
+      slides.forEach(s=>observer.observe(s));
 
-        slides.forEach(slide => observer.observe(slide));
-
-        /* ========== INICIALIZACIÓN SLIDE LINEALIDAD (NUEVO) ========== */
-        (function initLinealidad(){
+      /* === Slide: Linealidad === */
+      (function initLinealidad(){
         const svg = document.getElementById('lin-svg');
         const slider = document.getElementById('k-slider');
         const badge  = document.getElementById('k-badge');
         const msg    = document.getElementById('lin-msg');
+        if(!svg || !slider || !badge) return;
 
-        // Si el slide aún no existe en el DOM, salimos sin error
-        if (!svg || !slider || !badge) return;
+        const IS_MOBILE = window.matchMedia('(max-width: 768px)').matches;
+        const POINT_R = IS_MOBILE ? 6 : 3;
+        const LINE_W  = IS_MOBILE ? 3.5 : 2.5;
+        const CURVE_W = IS_MOBILE ? 4   : 3;
+        const RES_W   = IS_MOBILE ? 2.2 : 1.5;
 
         const gLinear = svg.querySelector('#line-linear');
         const gTrue   = svg.querySelector('#line-true');
         const gPts    = svg.querySelector('#points');
         const gRes    = svg.querySelector('#residuals');
 
-        // --- utilidades de escala ---
+        const plotGroup = svg.querySelector('#plot');
+        if (IS_MOBILE && plotGroup) plotGroup.setAttribute('transform','translate(40,12)');
+
+        // Escalas
         const XMIN=-3, XMAX=3, YMIN=-3, YMAX=3;
         const PLOT_W=560, PLOT_H=320;
+        const sx = x => ((x - XMIN)/(XMAX - XMIN))*PLOT_W;
+        const sy = y => PLOT_H - ((y - YMIN)/(YMAX - YMIN))*PLOT_H;
 
-        const sx = x => ( (x - XMIN) / (XMAX - XMIN) ) * PLOT_W;
-        const sy = y => PLOT_H - ( (y - YMIN) / (YMAX - YMIN) ) * PLOT_H;
+        const xs = Array.from({length:61},(_,i)=>XMIN + i*(XMAX-XMIN)/60);
+        const noise = x => .30*Math.sin(7*x) + .12*Math.sin(3.3*x+1.2);
 
-        const xs = Array.from({length: 61}, (_,i)=> XMIN + i*(XMAX-XMIN)/60);
-        const noise = x => 0.30*Math.sin(7*x) + 0.12*Math.sin(3.3*x+1.2);
-
-        function poly(points, stroke, width, dash) {
-            const p = document.createElementNS('http://www.w3.org/2000/svg','polyline');
-            p.setAttribute('fill','none');
-            p.setAttribute('stroke', stroke);
-            p.setAttribute('stroke-width', width);
-            if (dash) p.setAttribute('stroke-dasharray', dash);
-            p.setAttribute('points', points.map(([x,y]) => `${sx(x)},${sy(y)}`).join(' '));
-            return p;
+        function poly(points, stroke, width, dash){
+          const p = document.createElementNS('http://www.w3.org/2000/svg','polyline');
+          p.setAttribute('fill','none'); p.setAttribute('stroke',stroke);
+          p.setAttribute('stroke-width',width);
+          if(dash) p.setAttribute('stroke-dasharray',dash);
+          p.setAttribute('points', points.map(([x,y])=>`${sx(x)},${sy(y)}`).join(' '));
+          return p;
         }
-        function circle(x,y, r, fill, stroke) {
-            const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
-            c.setAttribute('cx', sx(x)); c.setAttribute('cy', sy(y));
-            c.setAttribute('r', r); c.setAttribute('fill', fill);
-            if (stroke) c.setAttribute('stroke', stroke);
-            return c;
+        function circle(x,y,r,fill,stroke){
+          const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+          c.setAttribute('cx',sx(x)); c.setAttribute('cy',sy(y));
+          c.setAttribute('r',r); c.setAttribute('fill',fill);
+          if(stroke) c.setAttribute('stroke',stroke);
+          return c;
         }
-        function vline(x, y1, y2, color) {
-            const l = document.createElementNS('http://www.w3.org/2000/svg','line');
-            l.setAttribute('x1', sx(x)); l.setAttribute('x2', sx(x));
-            l.setAttribute('y1', sy(y1)); l.setAttribute('y2', sy(y2));
-            l.setAttribute('stroke', color); l.setAttribute('stroke-width', '1.5');
-            l.setAttribute('opacity','0.7');
-            return l;
+        function vline(x,y1,y2,color,w=RES_W){
+          const l = document.createElementNS('http://www.w3.org/2000/svg','line');
+          l.setAttribute('x1',sx(x)); l.setAttribute('x2',sx(x));
+          l.setAttribute('y1',sy(y1)); l.setAttribute('y2',sy(y2));
+          l.setAttribute('stroke',color); l.setAttribute('stroke-width',w);
+          l.setAttribute('opacity','0.8');
+          return l;
         }
 
         function update(k){
-            gLinear.innerHTML=''; gTrue.innerHTML=''; gPts.innerHTML=''; gRes.innerHTML='';
+          gLinear.innerHTML=''; gTrue.innerHTML=''; gPts.innerHTML=''; gRes.innerHTML='';
 
-            const yTrue = x => x + k*x*x;
-            const yHatLinear = x => x; // recta asumida
+          const yTrue = x => x + k*x*x;
+          const yHatLinear = x => x;
 
-            // línea recta (modelo lineal simple)
-            gLinear.appendChild(poly(xs.map(x=>[x,yHatLinear(x)]), '#2563eb', 2.5, '6 4'));
-            // curva real
-            gTrue.appendChild(poly(xs.map(x=>[x,yTrue(x)]), '#ef4444', 3));
+          gLinear.appendChild(poly(xs.map(x=>[x,yHatLinear(x)]), '#2563eb', LINE_W, '6 4'));
+          gTrue.appendChild(poly(xs.map(x=>[x,yTrue(x)]), '#ef4444', CURVE_W));
 
-            // puntos + residuales
-            xs.forEach((x, i)=>{
-            const y = yTrue(x) + noise(x);
+          xs.forEach((x,i)=>{
+            const y  = yTrue(x) + noise(x);
             const yh = yHatLinear(x);
-            if (i%2===0) gRes.appendChild(vline(x, y, yh, '#f59e0b'));
-            gPts.appendChild(circle(x, y, 3, '#475569', 'white'));
-            });
+            if(i%2===0) gRes.appendChild(vline(x,y,yh,'#f59e0b',RES_W));
+            gPts.appendChild(circle(x,y,POINT_R,'#475569','white'));
+          });
 
-            const absK = Math.abs(k);
-            if (absK < 0.06){
-            badge.className = "inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-bold bg-green-100 text-green-700";
-            badge.textContent = `k = ${k.toFixed(2)} · Se cumple linealidad`;
-            } else if (absK < 0.22){
-            badge.className = "inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-bold bg-yellow-100 text-yellow-700";
-            badge.textContent = `k = ${k.toFixed(2)} · Leve curvatura`;
-            } else {
-            badge.className = "inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-bold bg-red-100 text-red-700";
-            badge.textContent = `k = ${k.toFixed(2)} · No linealidad`;
-            }
+          const absK = Math.abs(k);
+          if (absK < .06){
+            badge.className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-bold bg-green-100 text-green-700 badge-mobile";
+            badge.textContent=`k = ${k.toFixed(2)} · Se cumple linealidad`;
+          } else if (absK < .22){
+            badge.className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-bold bg-yellow-100 text-yellow-700 badge-mobile";
+            badge.textContent=`k = ${k.toFixed(2)} · Leve curvatura`;
+          } else {
+            badge.className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-bold bg-red-100 text-red-700 badge-mobile";
+            badge.textContent=`k = ${k.toFixed(2)} · No linealidad`;
+          }
 
-            if (msg){
+          if (msg){
             msg.innerHTML = `Con <span class="font-semibold">k ≈ 0</span>, la nube de puntos se alinea con la recta:
-                <em>ok</em>. Al aumentar |k|, aparece curvatura → considera
-                <span class="font-semibold">transformación</span>,
-                <span class="font-semibold">término cuadrático</span> o
-                <span class="font-semibold">modelos no lineales</span>.`;
-            }
+              <em>ok</em>. Al aumentar |k|, aparece curvatura → considera
+              <span class="font-semibold">transformación</span>,
+              <span class="font-semibold">término cuadrático</span> o
+              <span class="font-semibold">modelos no lineales</span>.`;
+          }
+        }
+        update(0);
+        slider.addEventListener('input', e=>update(parseFloat(e.target.value)));
+      })();
+
+      /* === Slide: Component + Residual (CPR) === */
+      (function initCPR(){
+        const svg    = document.getElementById('cpr-svg');
+        const slider = document.getElementById('cpr-slider');
+        const wrap   = document.getElementById('cpr-wrap');
+        const bubble = document.getElementById('cpr-bubble');
+        const badge  = document.getElementById('cpr-badge');
+        if(!svg || !slider || !wrap || !bubble || !badge) return;
+
+        const IS_MOBILE = window.matchMedia('(max-width: 768px)').matches;
+        const POINT_R = IS_MOBILE ? 6 : 3;
+        const LINE_W  = IS_MOBILE ? 3.5 : 2.5;
+        const TREND_W = IS_MOBILE ? 4   : 2.5;
+        const RES_W   = IS_MOBILE ? 2.2 : 1.5;
+
+        const gLinear = svg.querySelector('#cpr-line-linear');
+        const gTrend  = svg.querySelector('#cpr-trend');
+        const gPts    = svg.querySelector('#cpr-points');
+        const gRes    = svg.querySelector('#cpr-residuals');
+
+        const plotGroup = svg.querySelector('#plot');
+        if (IS_MOBILE && plotGroup) plotGroup.setAttribute('transform','translate(40,12)');
+
+        // Escalas
+        const XMIN=-3, XMAX=3, YMIN=-3, YMAX=3;
+        const PLOT_W=560, PLOT_H=320;
+        const sx = x => ((x - XMIN)/(XMAX - XMIN))*PLOT_W;
+        const sy = y => PLOT_H - ((y - YMIN)/(YMAX - YMIN))*PLOT_H;
+
+        // Datos base (X) y ruido
+        const xs = Array.from({length:61},(_,i)=>XMIN + i*(XMAX-XMIN)/60);
+        const noiseY = x => .35*Math.sin(7*x) + .12*Math.sin(3.3*x+1.2);
+
+        // Helpers UI para el slider
+        const pct = s => ((parseFloat(s.value)-parseFloat(s.min)) / (parseFloat(s.max)-parseFloat(s.min)));
+        function paintTrack(s){
+          const p = pct(s)*100, fill='#4f46e5', bg='#e5e7eb';
+          s.style.background = `linear-gradient(to right, ${fill} 0% ${p}%, ${bg} ${p}% 100%)`;
+        }
+        function placeBubble(s, w, b, badge, k){
+          const x = pct(s) * w.clientWidth;
+          b.style.left = `${x}px`;
+          b.textContent = `k = ${k.toFixed(2)}`;
+          const absK = Math.abs(k);
+          if (absK < .06){
+            b.className="absolute -top-8 left-0 -translate-x-1/2 px-2 py-1 rounded-md text-xs font-bold bg-green-100 text-green-700 shadow";
+            badge.className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-bold bg-green-100 text-green-700 badge-mobile";
+            badge.textContent="Se cumple linealidad";
+          } else if (absK < .22){
+            b.className="absolute -top-8 left-0 -translate-x-1/2 px-2 py-1 rounded-md text-xs font-bold bg-yellow-100 text-yellow-700 shadow";
+            badge.className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-bold bg-yellow-100 text-yellow-700 badge-mobile";
+            badge.textContent="Leve curvatura";
+          } else {
+            b.className="absolute -top-8 left-0 -translate-x-1/2 px-2 py-1 rounded-md text-xs font-bold bg-red-100 text-red-700 shadow";
+            badge.className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-bold bg-red-100 text-red-700 badge-mobile";
+            badge.textContent="No linealidad";
+          }
         }
 
-        // primera render y evento
+        // Utilidades SVG
+        function poly(points, stroke, width, dash){
+          const p = document.createElementNS('http://www.w3.org/2000/svg','polyline');
+          p.setAttribute('fill','none'); p.setAttribute('stroke',stroke);
+          p.setAttribute('stroke-width',width);
+          if(dash) p.setAttribute('stroke-dasharray',dash);
+          p.setAttribute('points', points.map(([x,y])=>`${sx(x)},${sy(y)}`).join(' '));
+          return p;
+        }
+        function circle(x,y,r,fill,stroke){
+          const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+          c.setAttribute('cx',sx(x)); c.setAttribute('cy',sy(y));
+          c.setAttribute('r',r); c.setAttribute('fill',fill);
+          if(stroke) c.setAttribute('stroke',stroke);
+          return c;
+        }
+        function vline(x,y1,y2,color,w=RES_W){
+          const l = document.createElementNS('http://www.w3.org/2000/svg','line');
+          l.setAttribute('x1',sx(x)); l.setAttribute('x2',sx(x));
+          l.setAttribute('y1',sy(y1)); l.setAttribute('y2',sy(y2));
+          l.setAttribute('stroke',color); l.setAttribute('stroke-width',w);
+          l.setAttribute('opacity','0.8');
+          return l;
+        }
+        function solve3(A,b){
+          A = A.map(r=>r.slice()); b=b.slice();
+          for(let i=0;i<3;i++){
+            let p=i; for(let r=i+1;r<3;r++) if(Math.abs(A[r][i])>Math.abs(A[p][i])) p=r;
+            [A[i],A[p]]=[A[p],A[i]]; [b[i],b[p]]=[b[p],b[i]];
+            const piv=A[i][i];
+            for(let j=i;j<3;j++) A[i][j]/=piv; b[i]/=piv;
+            for(let r=0;r<3;r++) if(r!==i){
+              const f=A[r][i];
+              for(let j=i;j<3;j++) A[r][j]-=f*A[i][j];
+              b[r]-=f*b[i];
+            }
+          }
+          return b;
+        }
+
+        function update(k){
+          gLinear.innerHTML=''; gTrend.innerHTML=''; gPts.innerHTML=''; gRes.innerHTML='';
+
+          // Predictor adicional Z (correlacionado con X) para CPR de múltiple
+          const noiseZ = x => .25*Math.sin(5*x + .7);
+          const Z = xs.map(x => 0.6*x + noiseZ(x));
+
+          // Relación "real": Y = 0.8 + 1*X + 0.8*Z + k*X^2 + ruido
+          const yTrue = (x,z) => 0.8 + x + 0.8*z + k*x*x;
+          const ys = xs.map((x,i)=> yTrue(x,Z[i]) + noiseY(x));
+
+          // OLS múltiple (Y ~ 1 + X + Z)
+          const n = xs.length, sum = a => a.reduce((s,v)=>s+v,0);
+          const Sx=sum(xs), Sz=sum(Z), Sy=sum(ys);
+          const Sxx=sum(xs.map(x=>x*x)), Szz=sum(Z.map(z=>z*z)), Sxz=sum(xs.map((x,i)=>x*Z[i]));
+          const Sxy=sum(xs.map((x,i)=>x*ys[i])), Szy=sum(Z.map((z,i)=>z*ys[i]));
+          const A = [[n,Sx,Sz],[Sx,Sxx,Sxz],[Sz,Sxz,Szz]];
+          const B = [Sy,Sxy,Szy];
+          const [b0,b1,b2] = solve3(A,B);
+
+          // CPR de X: b1*X + e_full (e_full = Y - (b0 + b1*X + b2*Z))
+          const linY = xs.map(x => b1*x);
+          const eFull = xs.map((x,i)=> ys[i] - (b0 + b1*x + b2*Z[i]));
+          const cprY  = xs.map((x,i)=> linY[i] + eFull[i]);
+
+          // Tendencia cuadrática sobre CPR
+          const x2 = xs.map(x=>x*x), x3 = xs.map(x=>x*x*x), x4 = xs.map(x=>x*x*x*x);
+          const Sx2=sum(x2), Sx3=sum(x3), Sx4=sum(x4),
+                Sy2=sum(cprY), Sxy2=sum(xs.map((x,i)=>x*cprY[i])),
+                Sx2y=sum(x2.map((xx,i)=>xx*cprY[i]));
+          const Aq = [[n,Sx,Sx2],[Sx,Sx2,Sx3],[Sx2,Sx3,Sx4]];
+          const Bq = [Sy2,Sxy2,Sx2y];
+          const [c0,c1,c2] = solve3(Aq,Bq);
+          const quadY = xs.map(x => c0 + c1*x + c2*x*x);
+
+          // Dibujo
+          gLinear.appendChild(poly(xs.map((x,i)=>[x,linY[i]]), '#2563eb', LINE_W, '6 4'));
+          gTrend.appendChild(poly(xs.map((x,i)=>[x,quadY[i]]), '#d946ef', TREND_W));
+          xs.forEach((x,i)=>{
+            gRes.appendChild(vline(x, linY[i], cprY[i], '#f59e0b', RES_W));
+            gPts.appendChild(circle(x, cprY[i], POINT_R, '#475569', 'white'));
+          });
+
+          // UI slider
+          const pos = ((parseFloat(slider.value)-parseFloat(slider.min)) / (parseFloat(slider.max)-parseFloat(slider.min)));
+          slider.style.background = `linear-gradient(to right,#4f46e5 0% ${pos*100}%, #e5e7eb ${pos*100}% 100%)`;
+          const x = pos * wrap.clientWidth;
+          bubble.style.left = `${x}px`;
+          bubble.textContent = `k = ${parseFloat(slider.value).toFixed(2)}`;
+
+          const absK = Math.abs(k);
+          if (absK < .06){
+            bubble.className="absolute -top-8 left-0 -translate-x-1/2 px-2 py-1 rounded-md text-xs font-bold bg-green-100 text-green-700 shadow";
+            badge.className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-bold bg-green-100 text-green-700 badge-mobile";
+            badge.textContent="Se cumple linealidad";
+          } else if (absK < .22){
+            bubble.className="absolute -top-8 left-0 -translate-x-1/2 px-2 py-1 rounded-md text-xs font-bold bg-yellow-100 text-yellow-700 shadow";
+            badge.className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-bold bg-yellow-100 text-yellow-700 badge-mobile";
+            badge.textContent="Leve curvatura";
+          } else {
+            bubble.className="absolute -top-8 left-0 -translate-x-1/2 px-2 py-1 rounded-md text-xs font-bold bg-red-100 text-red-700 shadow";
+            badge.className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-bold bg-red-100 text-red-700 badge-mobile";
+            badge.textContent="No linealidad";
+          }
+        }
+
+        // Primera render y eventos
         update(0);
         slider.addEventListener('input', e => update(parseFloat(e.target.value)));
-        })();
+        window.addEventListener('resize', () => {
+          // Reubica bubble al redimensionar
+          const k = parseFloat(slider.value);
+          const pos = ((k - parseFloat(slider.min)) / (parseFloat(slider.max)-parseFloat(slider.min)));
+          bubble.style.left = `${pos * wrap.clientWidth}px`;
+        });
+      })();
     });
-
-
-
-
-
-
-
-
-    // ======== INIT: Slide "Component + Residual (Y)" ========
-(function initCPR(){
-  const svg    = document.getElementById('cpr-svg');
-  const slider = document.getElementById('cpr-slider');
-  const wrap   = document.getElementById('cpr-wrap');
-  const bubble = document.getElementById('cpr-bubble');
-  const badge  = document.getElementById('cpr-badge');
-
-  if (!svg || !slider || !wrap || !bubble || !badge) return;
-
-  const gLinear = svg.querySelector('#cpr-line-linear');
-  const gTrend  = svg.querySelector('#cpr-trend');
-  const gPts    = svg.querySelector('#cpr-points');
-  const gRes    = svg.querySelector('#cpr-residuals');
-
-  // Escalas
-  const XMIN=-3, XMAX=3, YMIN=-3, YMAX=3;
-  const PLOT_W=560, PLOT_H=320;
-  const sx = x => ( (x - XMIN) / (XMAX - XMIN) ) * PLOT_W;
-  const sy = y => PLOT_H - ( (y - YMIN) / (YMAX - YMIN) ) * PLOT_H;
-
-  // Datos base
-  const xs = Array.from({length: 61}, (_,i)=> XMIN + i*(XMAX-XMIN)/60);
-  const noise = x => 0.30*Math.sin(7*x) + 0.12*Math.sin(3.3*x+1.2);
-
-  // Helpers UI (track + bubble) sin colisiones con otros sliders
-  const pct = (s) => ( (parseFloat(s.value)-parseFloat(s.min)) /
-                       (parseFloat(s.max)-parseFloat(s.min)) );
-  function paintTrack(s){
-    const p = pct(s)*100, fill='#4f46e5', bg='#e5e7eb';
-    s.style.background = `linear-gradient(to right, ${fill} 0% ${p}%, ${bg} ${p}% 100%)`;
-  }
-  function placeBubble(s, w, b, badge, k){
-    const x = pct(s) * w.clientWidth;
-    b.style.left = `${x}px`;
-    b.textContent = `k = ${k.toFixed(2)}`;
-    const absK = Math.abs(k);
-    if (absK < 0.06){
-      b.className = "absolute -top-8 left-0 -translate-x-1/2 px-2 py-1 rounded-md text-xs font-bold bg-green-100 text-green-700 shadow";
-      badge.className = "inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-bold bg-green-100 text-green-700";
-      badge.textContent = "Se cumple linealidad";
-    } else if (absK < 0.22){
-      b.className = "absolute -top-8 left-0 -translate-x-1/2 px-2 py-1 rounded-md text-xs font-bold bg-yellow-100 text-yellow-700 shadow";
-      badge.className = "inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-bold bg-yellow-100 text-yellow-700";
-      badge.textContent = "Leve curvatura";
-    } else {
-      b.className = "absolute -top-8 left-0 -translate-x-1/2 px-2 py-1 rounded-md text-xs font-bold bg-red-100 text-red-700 shadow";
-      badge.className = "inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-bold bg-red-100 text-red-700";
-      badge.textContent = "No linealidad";
-    }
-  }
-
-  // Utilidades SVG
-  function poly(points, stroke, width, dash) {
-    const p = document.createElementNS('http://www.w3.org/2000/svg','polyline');
-    p.setAttribute('fill','none');
-    p.setAttribute('stroke', stroke);
-    p.setAttribute('stroke-width', width);
-    if (dash) p.setAttribute('stroke-dasharray', dash);
-    p.setAttribute('points', points.map(([x,y]) => `${sx(x)},${sy(y)}`).join(' '));
-    return p;
-  }
-  function circle(x,y, r, fill, stroke) {
-    const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
-    c.setAttribute('cx', sx(x)); c.setAttribute('cy', sy(y));
-    c.setAttribute('r', r); c.setAttribute('fill', fill);
-    if (stroke) c.setAttribute('stroke', stroke);
-    return c;
-  }
-  function vline(x, y1, y2, color) {
-    const l = document.createElementNS('http://www.w3.org/2000/svg','line');
-    l.setAttribute('x1', sx(x)); l.setAttribute('x2', sx(x));
-    l.setAttribute('y1', sy(y1)); l.setAttribute('y2', sy(y2));
-    l.setAttribute('stroke', color); l.setAttribute('stroke-width', '1.5');
-    l.setAttribute('opacity','0.7');
-    return l;
-  }
-
-  // Resuelve cuadrático (para tendencia)
-  function solve3(A,b){
-    A = A.map(r=>r.slice()); b=b.slice();
-    for(let i=0;i<3;i++){
-      let p=i; for(let r=i+1;r<3;r++) if(Math.abs(A[r][i])>Math.abs(A[p][i])) p=r;
-      [A[i],A[p]]=[A[p],A[i]]; [b[i],b[p]]=[b[p],b[i]];
-      const piv=A[i][i];
-      for(let j=i;j<3;j++) A[i][j]/=piv; b[i]/=piv;
-      for(let r=0;r<3;r++) if(r!==i){
-        const f=A[r][i];
-        for(let j=i;j<3;j++) A[r][j]-=f*A[i][j];
-        b[r]-=f*b[i];
-      }
-    }
-    return b;
-  }
-
-  function update(k){
-    // Limpia capas
-    gLinear.innerHTML=''; gTrend.innerHTML=''; gPts.innerHTML=''; gRes.innerHTML='';
-
-    // 1) Relación real con curvatura y ruido
-    const yTrue = x => x + k*x*x;
-    const ys = xs.map(x => yTrue(x) + noise(x));
-
-    // 2) Ajuste lineal y = b0 + b1 x (OLS)
-    const n = xs.length;
-    const mean = a => a.reduce((s,v)=>s+v,0)/a.length;
-    const mx = mean(xs), my = mean(ys);
-    const sxx = xs.reduce((s,x)=>s+(x-mx)*(x-mx),0);
-    const sxy = xs.reduce((s,x,i)=>s+(x-mx)*(ys[i]-my),0);
-    const b1 = sxy / sxx;
-    const b0 = my - b1*mx;
-
-    // 3) CPR: b1*x + e = y - b0
-    const cprY = ys.map(y => y - b0);
-    const linY = xs.map(x => b1*x);
-
-    // 4) Tendencia (cuadrática) sobre CPR
-    const sum = a => a.reduce((s,v)=>s+v,0);
-    const x2 = xs.map(x=>x*x), x3 = xs.map(x=>x*x*x), x4 = xs.map(x=>x*x*x*x);
-    const Sx=sum(xs), Sx2=sum(x2), Sx3=sum(x3), Sx4=sum(x4),
-          Sy=sum(cprY), Sxy=sum(xs.map((x,i)=>x*cprY[i])),
-          Sx2y=sum(x2.map((xx,i)=>xx*cprY[i]));
-    const A = [[n,Sx,Sx2],[Sx,Sx2,Sx3],[Sx2,Sx3,Sx4]];
-    const B = [Sy, Sxy, Sx2y];
-    const [c0,c1,c2] = solve3(A,B);
-    const quadY = xs.map(x => c0 + c1*x + c2*x*x);
-
-    // 5) Dibujo
-    gLinear.appendChild(poly(xs.map((x,i)=>[x, linY[i]]), '#2563eb', 2.5, '6 4')); // β1·X
-    gTrend.appendChild(poly(xs.map((x,i)=>[x, quadY[i]]), '#d946ef', 2.5));        // tendencia
-    xs.forEach((x,i)=>{
-      gRes.appendChild(vline(x, linY[i], cprY[i], '#f59e0b')); // residuo vertical
-      gPts.appendChild(circle(x, cprY[i], 3, '#475569', 'white'));
-    });
-
-    // 6) UI
-    paintTrack(slider);
-    placeBubble(slider, wrap, bubble, badge, k);
-  }
-
-  update(0);
-  slider.addEventListener('input', e => update(parseFloat(e.target.value)));
-  window.addEventListener('resize', () => placeBubble(slider, wrap, bubble, badge, parseFloat(slider.value)));
-})();
-
-    </script>
-
-
+  </script>
 </body>
 </html>
