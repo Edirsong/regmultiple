@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Presentación: Regresión Múltiple v2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        /* Estilo base para la tipografía y el scroll */
+        body {
+            font-family: 'Inter', sans-serif;
+            color: #1a202c;
+            overscroll-behavior-y: contain; /* Evita el scroll "bounce" en móviles */
+        }
+
+        /* Contenedor principal para las diapositivas con scroll-snap */
+        .slides-container {
+            scroll-snap-type: y mandatory;
+            overflow-y: scroll;
+            height: 100vh;
+        }
+
+        /* Estilo base para cada diapositiva */
+        .slide {
+            scroll-snap-align: start;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            opacity: 0;
+            transition: opacity 0.8s ease-in-out;
+        }
+        
+        /* Clase que se añade con JS para activar la animación de entrada */
+        .slide.visible {
+            opacity: 1;
+        }
+        
+        /* Estilos para los placeholders de imágenes */
+        .imagen-placeholder {
+            width: 80%;
+            max-width: 450px;
+            min-height: 250px; /* Usamos min-height para flexibilidad */
+            border: 2px dashed #cbd5e1;
+            border-radius: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f8fafc;
+            color: #94a3b8;
+            font-weight: bold;
+            margin-top: 2rem;
+            padding: 1rem;
+        }
+
+        /* --- Animaciones reusables --- */
+        .fade-in-up {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        .slide.visible .fade-in-up {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .slide.visible .delay-200 { transition-delay: 200ms; }
+        .slide.visible .delay-400 { transition-delay: 400ms; }
+        .slide.visible .delay-600 { transition-delay: 600ms; }
+        .slide.visible .delay-800 { transition-delay: 800ms; }
+
+        /* Animación para la lista de supuestos */
+        .checklist-item {
+            opacity: 0;
+            transform: translateX(-20px);
+            transition: opacity 1s ease, transform 1s ease;
+        }
+        .slide.visible .checklist-item {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+                /* Retrasos escalonados */
+        .slide.visible .checklist-item:nth-child(1) {
+        transition-delay: 0.2s;
+        }
+        .slide.visible .checklist-item:nth-child(2) {
+        transition-delay: 0.8s;
+        }
+        .slide.visible .checklist-item:nth-child(3) {
+        transition-delay: 1.4s;
+        }
+        .slide.visible .checklist-item:nth-child(4) {
+        transition-delay: 2s;
+        }
+        /* Puedes seguir agregando más según el número de ítems */
+
+        .check-icon {
+            opacity: 0;
+            transform: scale(0.5);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            transition-delay: inherit;
+        }
+        .slide.visible .check-icon {
+            opacity: 1;
+            transform: scale(1);
+        }
+        
+        /* Animación para la escala VIF */
+        .vif-indicator {
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 1s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .slide.visible .vif-indicator {
+            transform: scaleX(1);
+            transition-delay: 600ms;
+        }
+
+        .slide.visible .vif-indicator:nth-child(1) {
+        transition-delay: 0.2s;
+        }
+        .slide.visible .vif-indicator:nth-child(2) {
+        transition-delay: 1s;
+        }
+        .slide.visible .vif-indicator:nth-child(3) {
+        transition-delay: 1.8s;
+        }
+        .slide.visible .vif-indicator:nth-child(4) {
+        transition-delay: 2.6s;
+        }
+
+        /* Animación para escala Durbin-Watson */
+        .dw-pointer {
+            bottom: -10px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 2s ease, transform 2s ease;
+        }
+        .slide.visible .dw-pointer {
+            opacity: 1;
+            transform: translateY(0);
+            transition-delay: 600ms;
+        }
+
+        .imagen-placeholder{
+        padding: 0;                /* quita relleno interno */
+        margin: 0;
+        border: 0;                 /* si no quieres el borde punteado */
+        background: transparent;
+        display: block;
+        line-height: 0;            /* evita espacio por línea base */
+        overflow: hidden;          /* por si la imagen llega a sobresalir */
+        }
+
+        .qq-image{
+        display: block;            /* evita espacio extra bajo la imagen */
+        width: 100%;               /* ocupa todo el ancho disponible */
+        height: auto;              /* mantiene proporción */
+        /* Si quieres que LLENE el alto de un contenedor fijo, usa:
+        height: 100%;
+        object-fit: cover;         // o 'contain' si no quieres recortar
+        */
+        }
+        p.fade-in-up.delay-200 {
+        margin-bottom: 0.5rem; /* Reduce espacio entre texto y imagen */
+        }
+
+ 
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <div class="slides-container">
+
+        <!-- Slide 1: Título -->
+        <section class="slide bg-slate-900 text-white">
+            <h1 class="text-4xl md:text-7xl font-black tracking-tight fade-in-up">REGRESIÓN MÚLTIPLE</h1>
+            <h2 class="mt-4 text-xl md:text-3xl font-light text-slate-300 fade-in-up delay-200">Y Validación de Supuestos</h2>
+        </section>
+
+        <!-- Slide 2: Diagrama de Regresión Múltiple -->
+        <section class="slide">
+            <h2 class="text-3xl md:text-5xl font-bold text-slate-800 fade-in-up">Regresión Múltiple</h2>
+            <p class="mt-4 text-lg md:text-xl text-gray-600 max-w-2xl fade-in-up delay-200">Explicamos una variable (Y) a partir de múltiples variables (X).</p>
+            <div class="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 mt-12">
+                <div class="flex gap-4">
+                    <div class="fade-in-up delay-400 bg-blue-100 text-blue-800 p-4 rounded-lg shadow-md font-bold text-xl">X1</div>
+                    <div class="fade-in-up delay-600 bg-blue-100 text-blue-800 p-4 rounded-lg shadow-md font-bold text-xl">X2</div>
+                    <div class="fade-in-up delay-800 bg-blue-100 text-blue-800 p-4 rounded-lg shadow-md font-bold text-xl">X3</div>
+                    <div class="fade-in-up delay-600 bg-blue-100 text-blue-800 p-4 rounded-lg shadow-md font-bold text-xl">...</div>
+                    <div class="fade-in-up delay-800 bg-blue-100 text-blue-800 p-4 rounded-lg shadow-md font-bold text-xl">Xn</div>
+                </div>
+                <div class="fade-in-up delay-800 text-blue-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 md:h-16 md:w-16 transform md:rotate-0 rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                </div>
+                <div class="fade-in-up delay-800 bg-green-100 text-green-800 p-8 rounded-full shadow-lg font-bold text-3xl">Y</div>
+            </div>
+        </section>
+        
+        <!-- Slide 3: Coeficientes Estimados -->
+        <section class="slide">
+            <h2 class="text-3xl md:text-5xl font-bold text-slate-800 fade-in-up">Coeficientes Estimados</h2>
+            <p class="mt-4 text-lg md:text-xl text-gray-600 max-w-2xl fade-in-up delay-200">Cuantifican el impacto de cada variable X en Y.</p>
+            <div class="flex flex-col md:flex-row gap-6 mt-10">
+                <div class="fade-in-up delay-400 bg-white p-6 rounded-lg shadow-xl border border-gray-200">
+                    <h3 class="text-xl font-bold text-indigo-600">b₀ (Intercepto)</h3>
+                </div>
+                <div class="fade-in-up delay-600 bg-white p-6 rounded-lg shadow-xl border border-gray-200">
+                    <h3 class="text-xl font-bold text-indigo-600">b₁ (Pendiente X1)</h3>
+                </div>
+                <div class="fade-in-up delay-800 bg-white p-6 rounded-lg shadow-xl border border-gray-200">
+                    <h3 class="text-xl font-bold text-indigo-600">bₙ (Otras Pendientes)</h3>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 4: Checklist de Supuestos -->
+        <section class="slide bg-slate-800 text-white">
+            <h2 class="text-3xl md:text-5xl font-bold fade-in-up">Supuestos Clave</h2>
+            <p class="mt-4 text-lg md:text-xl text-slate-300 max-w-2xl fade-in-up delay-200">Debemos validar los supuestos para confiar en el modelo.</p>
+            <ul class="mt-8 text-left space-y-4 text-xl md:text-2xl">
+                <li class="checklist-item delay-200 flex items-center gap-4">
+                    <span class="check-icon text-green-400"><svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg></span> Normalidad
+                </li>
+                <li class="checklist-item delay-400 flex items-center gap-4">
+                     <span class="check-icon text-green-400"><svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg></span> Homocedasticidad
+                </li>
+                <li class="checklist-item delay-600 flex items-center gap-4">
+                     <span class="check-icon text-green-400"><svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg></span> Independencia (No Autocorrelación)
+                </li>
+                <li class="checklist-item delay-800 flex items-center gap-4">
+                     <span class="check-icon text-green-400"><svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg></span> No Multicolinealidad
+                </li>
+            </ul>
+        </section>
+        
+        <!-- Slide 5: Normalidad -->
+        <section class="slide">
+        <h2 class="text-3xl md:text-5xl font-bold text-slate-800 fade-in-up">
+            1. Normalidad de Residuos
+        </h2>
+        <p class="mt-4 text-lg md:text-xl text-gray-600 max-w-2xl fade-in-up delay-200">
+            Validamos con un gráfico Q-Q.
+        </p>
+        <div class="imagen-placeholder fade-in-up delay-400">
+            <img src="imagenes/normalidad.png" alt="Gráfico Q-Q" class="qq-image">
+        </div>
+        </section>
+
+
+        <!-- Slide 6: Homocedasticidad -->
+<section class="slide">
+  <h2 class="text-3xl md:text-5xl font-bold text-slate-800 fade-in-up">
+    2. Homocedasticidad
+  </h2>
+  <p class="mt-4 text-lg md:text-xl text-gray-600 max-w-2xl fade-in-up delay-200">
+    La varianza de los errores debe ser constante.
+  </p>
+  <div class="imagen-placeholder fade-in-up delay-400">
+    <img src="imagenes/homocedasticidad.png" alt="Gráfico Residuos vs. Ajustados" class="homoc-image">
+  </div>
+</section>
+
+
+        <!-- Slide 7: Autocorrelación -->
+        <section class="slide">
+            <h2 class="text-4xl md:text-6xl font-bold text-slate-800 fade-in-up">¿Los errores están correlacionados?</h2>
+            <p class="mt-4 text-lg md:text-xl text-gray-600 max-w-2xl fade-in-up delay-200">Lo medimos con el test de Durbin-Watson.</p>
+            <div class="w-full max-w-2xl mt-8 fade-in-up delay-400">
+                <div class="relative h-4 bg-gray-200 rounded-full flex">
+                    <div class="w-1/2 bg-gradient-to-r from-red-400 to-yellow-300 rounded-l-full"></div>
+                    <div class="w-1/2 bg-gradient-to-r from-yellow-300 to-red-400 rounded-r-full"></div>
+                    <div class="absolute w-1/4 h-full left-1/4 bg-green-400 border-x-4 border-gray-100"></div>
+                     <div class="dw-pointer absolute left-1/2 -translate-x-1/2 text-center">
+                        <span class="font-bold text-green-700 bg-white px-2 rounded">Ideal ≈ 2</span>
+                        <div class="w-0 h-0 border-l-8 border-l-transparent border-r-8 border-r-transparent border-t-8 border-t-green-500 mx-auto"></div>
+                    </div>
+                </div>
+                <div class="flex justify-between text-sm font-bold mt-2 text-gray-600">
+                    <span>0 (Corr. +)</span>
+                    <span>4 (Corr. -)</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 8: Multicolinealidad (VIF) -->
+        <section class="slide">
+            <h2 class="text-3xl md:text-5xl font-bold text-slate-800 fade-in-up">3. No Multicolinealidad</h2>
+             <p class="mt-4 text-lg md:text-xl text-gray-600 max-w-2xl fade-in-up delay-200">Usamos el Factor de Inflación de Varianza (VIF).</p>
+            <div class="w-full max-w-md mt-8 fade-in-up delay-400">
+                <div class="text-left font-bold text-gray-700">VIF < 10 es aceptable</div>
+                <div class="relative h-8 bg-gray-200 rounded-full mt-2 overflow-hidden">
+                    <div class="absolute h-full w-full bg-gradient-to-r from-green-400 to-red-500"></div>
+                    <div class="vif-indicator absolute h-full w-1/4 bg-green-500 flex items-center justify-end pr-2 rounded-r-full">
+                         <span class="text-white font-black text-lg">5</span>
+                    </div>
+                    <div class="absolute left-1/2 -translate-x-1/2 top-0 h-full border-r-4 border-dashed border-white flex items-center">
+                        <span class="font-bold bg-white px-2 rounded-md -mr-7 shadow-lg">10</span>
+                    </div>
+                </div>
+                <div class="text-right font-bold text-red-600 mt-1">VIF > 10 es un problema</div>
+            </div>
+        </section>
+
+        <!-- Slide 9: Frase Final -->
+        <section class="slide bg-indigo-700 text-white space-y-6 md:space-y-10">
+  <h2 class="text-4xl md:text-6xl font-black tracking-tight fade-in-up">
+    ¿Qué nos dice el modelo?
+  </h2>
+
+  <div class="imagen-placeholder border-indigo-400 bg-indigo-600 text-indigo-200 fade-in-up delay-200">
+    <img src="imagenes/resumen.png" alt="Resumen del Modelo" class="resumen-image">
+  </div>
+</section>
+
+
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const slides = document.querySelectorAll('.slide');
+
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.5 // Se activa cuando el 50% del slide es visible
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    // Cuando el slide entra en el viewport, añade la clase 'visible'
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    } else {
+                        // Cuando el slide sale, remueve la clase para reiniciar la animación
+                        entry.target.classList.remove('visible');
+                    }
+                });
+            }, observerOptions);
+
+            slides.forEach(slide => {
+                observer.observe(slide);
+            });
+        });
+    </script>
+
+</body>
+</html>
